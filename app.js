@@ -23,18 +23,27 @@ const storage = {
     if (callback) callback(result);
   },
   set: (items, callback) => {
-    for (let key in items) {
-      localStorage.setItem(key, JSON.stringify(items[key]));
+    try {
+      for (let key in items) {
+        localStorage.setItem(key, JSON.stringify(items[key]));
+      }
+      if (callback) callback();
+    } catch (e) {
+      console.error('Storage set error:', e);
+      alert('데이터 저장 중 오류가 발생했습니다. (저장 공간 부족 등)');
     }
-    if (callback) callback();
   },
   remove: (keys, callback) => {
-    if (typeof keys === 'string') {
-      localStorage.removeItem(keys);
-    } else if (Array.isArray(keys)) {
-      keys.forEach(key => localStorage.removeItem(key));
+    try {
+      if (typeof keys === 'string') {
+        localStorage.removeItem(keys);
+      } else if (Array.isArray(keys)) {
+        keys.forEach(key => localStorage.removeItem(key));
+      }
+      if (callback) callback();
+    } catch (e) {
+      console.error('Storage remove error:', e);
     }
-    if (callback) callback();
   }
 };
 
@@ -1389,12 +1398,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (btnBackup) {
     btnBackup.addEventListener('click', () => {
-      storage.get(['memo', 'bookmarks', 'clipboards', 'addresses'], (result) => {
+      // Get all core data including PDF meta
+      storage.get(['memo', 'bookmarks', 'clipboards', 'addresses', 'pdfMeta'], (result) => {
         const data = {
           memo: result.memo || '',
           bookmarks: result.bookmarks || [],
           clipboards: result.clipboards || [],
           addresses: result.addresses || [],
+          pdfMeta: result.pdfMeta || [],
           version: '1.0',
           backupDate: new Date().toISOString()
         };
@@ -1403,7 +1414,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         const now = new Date();
-        const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+        const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
         a.href = url;
         a.download = `sidebar_backup_${dateStr}.json`;
         a.click();
@@ -1437,38 +1448,21 @@ document.addEventListener('DOMContentLoaded', () => {
             memo: data.memo || '',
             bookmarks: data.bookmarks || [],
             clipboards: data.clipboards || [],
-            addresses: data.addresses || []
+            addresses: data.addresses || [],
+            pdfMeta: data.pdfMeta || []
           }, () => {
-            // Update local state and UI
-            if (data.memo !== undefined) memoContent.value = data.memo;
-            
-            if (data.bookmarks) {
-              bookmarks = data.bookmarks;
-              while (bookmarks.length < GRID_SIZE) bookmarks.push(null);
-              if (bookmarks.length > GRID_SIZE) bookmarks = bookmarks.slice(0, GRID_SIZE);
-              renderBookmarks();
-            }
-            
-            if (data.clipboards) {
-              clipboards = data.clipboards;
-              while (clipboards.length < GRID_SIZE) clipboards.push(null);
-              if (clipboards.length > GRID_SIZE) clipboards = clipboards.slice(0, GRID_SIZE);
-              renderClipboards();
-            }
-            
-            if (data.addresses) {
-              addressData = data.addresses;
-              renderAddresses();
-            }
-            
-            alert('데이터 복구가 완료되었습니다!');
-            importFile.value = '';
+            alert('데이터 복구가 완료되었습니다! 페이지를 새로고침하여 적용합니다.');
+            location.reload();
           });
         } catch (err) {
           alert('올바른 백업 파일이 아닙니다.');
           console.error(err);
           importFile.value = '';
         }
+      };
+      reader.onerror = () => {
+        alert('파일을 읽는 중 오류가 발생했습니다.');
+        importFile.value = '';
       };
       reader.readAsText(file);
     });
