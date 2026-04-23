@@ -1439,10 +1439,28 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
           const data = JSON.parse(event.target.result);
           
+          if (!data || (typeof data !== 'object')) {
+            alert('유효하지 않은 백업 데이터 형식입니다.');
+            importFile.value = '';
+            return;
+          }
+
           if (!confirm('백업 파일을 복구하시겠습니까? 기존 데이터는 모두 덮어씌워집니다.')) {
             importFile.value = '';
             return;
           }
+
+          // Summary message to help debugging
+          const summary = `가져온 데이터:
+- 메모: ${data.memo ? '있음' : '없음'}
+- 북마크: ${Array.isArray(data.bookmarks) ? data.bookmarks.length : 0}개
+- 클립보드: ${Array.isArray(data.clipboards) ? data.clipboards.length : 0}개
+- 주소록: ${Array.isArray(data.addresses) ? data.addresses.length : 0}개
+- PDF: ${Array.isArray(data.pdfMeta) ? data.pdfMeta.length : 0}개
+
+복구를 시작합니다...`;
+          
+          alert(summary);
 
           storage.set({
             memo: data.memo || '',
@@ -1451,11 +1469,13 @@ document.addEventListener('DOMContentLoaded', () => {
             addresses: data.addresses || [],
             pdfMeta: data.pdfMeta || []
           }, () => {
-            alert('데이터 복구가 완료되었습니다! 페이지를 새로고침하여 적용합니다.');
-            location.reload();
+            alert('데이터 복구 성공! 페이지를 새로고침하여 최종 적용합니다.');
+            setTimeout(() => {
+              location.reload();
+            }, 300);
           });
         } catch (err) {
-          alert('올바른 백업 파일이 아닙니다.');
+          alert('복구 중 오류가 발생했습니다: ' + err.message);
           console.error(err);
           importFile.value = '';
         }
@@ -1464,7 +1484,7 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('파일을 읽는 중 오류가 발생했습니다.');
         importFile.value = '';
       };
-      reader.readAsText(file);
+      reader.readAsText(file, 'UTF-8');
     });
   }
 
