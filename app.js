@@ -458,6 +458,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const GRID_SIZE = 60;
   let bookmarks = new Array(GRID_SIZE).fill(null);
   let selectedBookmarkIndex = null;
+  let bookmarkSearchQuery = ''; // [FIX] Move declaration here
 
   const bookmarksGrid = document.getElementById('bookmarksGrid');
   const btnBookmarkEdit = document.getElementById('btnBookmarkEdit');
@@ -492,7 +493,6 @@ document.addEventListener('DOMContentLoaded', () => {
     storage.set({ bookmarks: bookmarks });
   }
 
-  let bookmarkSearchQuery = '';
   const bookmarkSearchInput = document.getElementById('bookmarkSearch');
   const clearBookmarkSearch = document.getElementById('clearBookmarkSearch');
   if (bookmarkSearchInput) {
@@ -742,6 +742,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ----------------------------------------------------
   let clipboards = new Array(GRID_SIZE).fill(null);
   let selectedClipboardIndex = null;
+  let clipboardSearchQuery = ''; // [FIX] Move declaration here
 
   const clipboardGrid = document.getElementById('clipboardGrid');
   const btnClipboardEdit = document.getElementById('btnClipboardEdit');
@@ -780,7 +781,6 @@ document.addEventListener('DOMContentLoaded', () => {
     storage.set({ clipboards: clipboards });
   }
 
-  let clipboardSearchQuery = '';
   const clipboardSearchInput = document.getElementById('clipboardSearch');
   const clearClipboardSearch = document.getElementById('clearClipboardSearch');
   if (clipboardSearchInput) {
