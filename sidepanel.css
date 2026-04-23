@@ -87,7 +87,8 @@ body {
   flex: 1;
   overflow-y: auto;
   position: relative;
-  /* Removed padding for edge-to-edge textarea */
+  touch-action: pan-y; /* Allow vertical pan, handle horizontal via JS */
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Search Input Styles */

@@ -89,6 +89,46 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // Swipe Logic for Tab Switching
+  let touchStartX = 0;
+  let touchStartY = 0;
+  const contentArea = document.querySelector('.content-area');
+
+  contentArea.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+    touchStartY = e.changedTouches[0].screenY;
+  }, { passive: true });
+
+  contentArea.addEventListener('touchend', (e) => {
+    const touchEndX = e.changedTouches[0].screenX;
+    const touchEndY = e.changedTouches[0].screenY;
+    handleSwipe(touchStartX, touchStartY, touchEndX, touchEndY);
+  }, { passive: true });
+
+  function handleSwipe(startX, startY, endX, endY) {
+    const deltaX = endX - startX;
+    const deltaY = endY - startY;
+    
+    // Ignore small swipes (min 80px) and vertical swipes (max 60px)
+    if (Math.abs(deltaX) < 80 || Math.abs(deltaY) > 60) return;
+    
+    // Don't swipe if in edit mode or focus is on an input/textarea
+    const activeEl = document.activeElement;
+    if (isEditMode || (activeEl && ['INPUT', 'TEXTAREA'].includes(activeEl.tagName))) return;
+
+    const currentTab = document.querySelector('.nav-tab.active');
+    const tabList = Array.from(tabs);
+    const currentIndex = tabList.indexOf(currentTab);
+    
+    if (deltaX > 20) {
+      // Swipe Right -> Go to Previous Tab
+      if (currentIndex > 0) tabList[currentIndex - 1].click();
+    } else if (deltaX < -20) {
+      // Swipe Left -> Go to Next Tab
+      if (currentIndex < tabList.length - 1) tabList[currentIndex + 1].click();
+    }
+  }
+
   // 2. Memo Logic
   const btnEdit = document.getElementById('btnEdit');
   const btnClear = document.getElementById('btnClear');
