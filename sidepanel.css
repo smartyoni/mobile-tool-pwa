@@ -22,7 +22,11 @@ body {
   color: var(--text-primary);
   width: 100%;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
+  position: fixed; /* Prevent bouncy scrolling on iOS */
+  top: 0;
+  left: 0;
 }
 
 .app-container {
@@ -335,7 +339,7 @@ body {
 
 /* App Footer & Buttons */
 .app-footer {
-  height: 56px;
+  height: calc(56px + env(safe-area-inset-bottom));
   background: var(--panel-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -343,8 +347,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 12px;
+  padding: 0 12px env(safe-area-inset-bottom) 12px;
   flex-shrink: 0;
+  z-index: 100;
 }
 
 .left-actions {
