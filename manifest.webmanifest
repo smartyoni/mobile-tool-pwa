@@ -1,0 +1,21 @@
+{
+  "name": "도구모음 북마크 클립보드",
+  "short_name": "도구모음",
+  "description": "북마크, 클립보드, 메모장, 주소록 및 PDF 뷰어 도구모음",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0A84FF",
+  "icons": [
+    {
+      "src": "icons/icon128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

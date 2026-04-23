@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>도구모음</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Nanum+Myeongjo:wght@400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="sidepanel.css">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#ffffff">
+</head>
+<body>
+  <div class="app-container">
+    <nav class="nav-tabs">
+      <button class="nav-tab active" data-tab="memo">
+        <span class="tab-icon">📝</span>
+        <span class="tab-text">메모장</span>
+      </button>
+      <button class="nav-tab" data-tab="bookmarks">
+        <span class="tab-icon">🔖</span>
+        <span class="tab-text">북마크</span>
+      </button>
+      <button class="nav-tab" data-tab="clipboard">
+        <span class="tab-icon">📋</span>
+        <span class="tab-text">클립보드</span>
+      </button>
+      <button class="nav-tab" data-tab="addresses">
+        <span class="tab-icon">🏠</span>
+        <span class="tab-text">주소록</span>
+      </button>
+      <button class="nav-tab" data-tab="pdfviewer">
+        <span class="tab-icon">📄</span>
+        <span class="tab-text">PDF</span>
+      </button>
+    </nav>
+
+    <main class="content-area">
+      <!-- Memo Tab Content -->
+      <section id="memo" class="tab-content active">
+        <textarea id="memoContent" placeholder="여기에 메모를 입력하세요..." spellcheck="false"></textarea>
+        <div id="memoPreview" class="markdown-body hidden"></div>
+      </section>
+
+      <section id="bookmarks" class="tab-content">
+        <div class="search-container" style="padding: 12px; padding-bottom: 0;">
+          <div class="search-input-wrapper">
+            <input type="text" id="bookmarkSearch" placeholder="북마크 이름, 주소 검색...">
+            <button class="clear-search" id="clearBookmarkSearch">✖</button>
+          </div>
+        </div>
+        <div class="bookmarks-grid" id="bookmarksGrid" style="flex: 1; overflow-y: auto;">
+          <!-- 60 Bookmark blocks will be generated here -->
+        </div>
+      </section>
+      <section id="clipboard" class="tab-content">
+        <div class="search-container" style="padding: 12px; padding-bottom: 0;">
+          <div class="search-input-wrapper">
+            <input type="text" id="clipboardSearch" placeholder="클립보드 제목, 내용 검색...">
+            <button class="clear-search" id="clearClipboardSearch">✖</button>
+          </div>
+        </div>
+        <div class="bookmarks-grid" id="clipboardGrid" style="flex: 1; overflow-y: auto;">
+          <!-- 60 Clipboard blocks will be generated here -->
+        </div>
+      </section>
+      <section id="addresses" class="tab-content">
+        <div class="search-container" style="padding: 12px;">
+          <div class="search-input-wrapper">
+            <input type="text" id="addressSearch" placeholder="건물명 또는 주소로 검색...">
+            <button class="clear-search" id="clearAddressSearch">✖</button>
+          </div>
+        </div>
+        <div class="address-list-container" id="addressList" style="flex: 1; overflow-y: auto; padding: 0 12px 12px 12px; display: flex; flex-direction: column; gap: 8px;">
+          <!-- 237+ Address items will be generated here -->
+        </div>
+      </section>
+      <section id="pdfviewer" class="tab-content">
+        <div id="pdfListView" style="display: flex; flex-direction: column; height: 100%;">
+          <div class="search-container" style="padding: 12px; padding-bottom: 0;">
+            <div class="search-input-wrapper">
+              <input type="text" id="pdfSearch" placeholder="PDF 파일명 검색...">
+              <button class="clear-search" id="clearPdfSearch">✖</button>
+            </div>
+          </div>
+          <div id="pdfFileList" style="flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px;"></div>
+        </div>
+        <div id="pdfDetailView" style="display: none; flex-direction: column; height: 100%;">
+          <div style="display: flex; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--border-color); gap: 8px;">
+            <button id="btnPdfBack" class="btn small-btn">← 목록</button>
+            <span id="pdfViewerTitle" style="flex: 1; font-weight: 600; font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+            <button id="btnPdfDownload" class="btn small-btn primary-btn">저장</button>
+          </div>
+          <iframe id="pdfFrame" style="flex: 1; border: none; width: 100%; background: #fff;"></iframe>
+        </div>
+        <input type="file" id="pdfFileInput" accept=".pdf" style="display: none;" multiple>
+      </section>
+    </main>
+
+    <footer class="app-footer" id="appFooter">
+      <div class="left-actions">
+        <button id="btnBackup" class="btn small-btn" title="데이터 백업">백업</button>
+        <button id="btnRestore" class="btn small-btn" title="데이터 복구">복구</button>
+        <button id="btnTOC" class="btn small-btn" title="목차 보기">목차</button>
+        <button id="btnDownload" class="btn small-btn" title="MD 파일로 저장">다운로드</button>
+        <button id="btnCollapseAll" class="btn small-btn" title="모두 접기">모두 접기</button>
+        <input type="file" id="importFile" accept=".json" style="display: none;">
+      </div>
+
+      <!-- Memo Footer Actions -->
+      <div id="memoActions" class="footer-actions">
+        <!-- View Mode -->
+        <button id="btnEdit" class="btn primary-btn">수정</button>
+        <!-- Edit Mode -->
+        <button id="btnClear" class="btn danger-btn hidden">내용삭제</button>
+        <button id="btnSave" class="btn primary-btn hidden">저장</button>
+      </div>
+
+      <!-- Bookmarks Footer Actions -->
+      <div id="bookmarkActions" class="footer-actions" style="display: none;">
+        <button id="btnBookmarkEdit" class="btn primary-btn" disabled>수정</button>
+        <button id="btnBookmarkDelete" class="btn danger-btn" disabled>삭제</button>
+      </div>
+
+      <!-- Clipboard Footer Actions -->
+      <div id="clipboardActions" class="footer-actions" style="display: none;">
+        <button id="btnClipboardEdit" class="btn primary-btn" disabled>수정</button>
+        <button id="btnClipboardDelete" class="btn danger-btn" disabled>삭제</button>
+      </div>
+
+      <!-- Address Footer Actions -->
+      <div id="addressActions" class="footer-actions" style="display: none;">
+        <button id="btnAddressAdd" class="btn primary-btn" style="width: 100%;">새 건물 추가</button>
+      </div>
+
+      <!-- PDF Footer Actions -->
+      <div id="pdfActions" class="footer-actions" style="display: none;">
+        <button id="btnPdfUpload" class="btn primary-btn" style="width: 100%;">📄 PDF 파일 추가</button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Bookmark Edit Modal -->
+  <div id="bookmarkModal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h3 class="modal-title">북마크 설정</h3>
+      <div class="form-group">
+        <label for="bookmarkName">이름</label>
+        <input type="text" id="bookmarkName" placeholder="예: 구글">
+      </div>
+      <div class="form-group">
+        <label for="bookmarkUrl">주소 (URL)</label>
+        <input type="url" id="bookmarkUrl" placeholder="https://google.com">
+      </div>
+      <div class="form-group">
+        <label>색상 선택</label>
+        <div class="color-swatches" id="colorSwatches">
+          <button class="color-swatch" data-color="#FF453A" style="background-color: #FF453A;"></button>
+          <button class="color-swatch" data-color="#FF9F0A" style="background-color: #FF9F0A;"></button>
+          <button class="color-swatch" data-color="#FFD60A" style="background-color: #FFD60A;"></button>
+          <button class="color-swatch" data-color="#32D74B" style="background-color: #32D74B;"></button>
+          <button class="color-swatch active" data-color="#0A84FF" style="background-color: #0A84FF;"></button>
+          <button class="color-swatch" data-color="#5E5CE6" style="background-color: #5E5CE6;"></button>
+          <button class="color-swatch" data-color="#BF5AF2" style="background-color: #BF5AF2;"></button>
+          <button class="color-swatch" data-color="#8E8E93" style="background-color: #8E8E93;"></button>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button id="btnCancelBookmark" class="btn">취소</button>
+        <button id="btnSaveBookmark" class="btn primary-btn">저장</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Clipboard Edit Modal -->
+  <div id="clipboardEditModal" class="modal-overlay hidden" style="z-index: 1000;">
+    <div class="modal-content full-screen-modal">
+      <!-- Header removed as requested -->
+      <div class="form-group">
+        <label for="clipboardTitle">제목</label>
+        <input type="text" id="clipboardTitle" placeholder="제목을 입력하세요">
+      </div>
+      <div class="form-group">
+        <label for="clipboardText">내용</label>
+        <textarea id="clipboardText" rows="5" placeholder="여러 줄의 내용을 입력할 수 있습니다" style="flex: 1; min-height: 100px; width: 100%; border-radius: 8px; border: 1px solid var(--border-color); background-color: rgba(0,0,0,0.05); color: var(--text-primary); padding: 12px; font-family: inherit; resize: none; margin-top: 8px;"></textarea>
+      </div>
+      <div class="form-group">
+        <label>색상 선택</label>
+        <div class="color-swatches small-swatches" id="clipboardColorSwatches">
+          <button class="color-swatch clipboard-color-swatch" data-color="#FF453A" style="background-color: #FF453A;"></button>
+          <button class="color-swatch clipboard-color-swatch" data-color="#FF9F0A" style="background-color: #FF9F0A;"></button>
+          <button class="color-swatch clipboard-color-swatch" data-color="#FFD60A" style="background-color: #FFD60A;"></button>
+          <button class="color-swatch clipboard-color-swatch" data-color="#32D74B" style="background-color: #32D74B;"></button>
+          <button class="color-swatch clipboard-color-swatch active" data-color="#0A84FF" style="background-color: #0A84FF;"></button>
+          <button class="color-swatch clipboard-color-swatch" data-color="#5E5CE6" style="background-color: #5E5CE6;"></button>
+          <button class="color-swatch clipboard-color-swatch" data-color="#BF5AF2" style="background-color: #BF5AF2;"></button>
+          <button class="color-swatch clipboard-color-swatch" data-color="#8E8E93" style="background-color: #8E8E93;"></button>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button id="btnCancelClipboardEdit" class="btn">취소</button>
+        <button id="btnSaveClipboard" class="btn primary-btn">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clipboard View Modal -->
+  <div id="clipboardViewModal" class="modal-overlay hidden" style="z-index: 1000;">
+    <div class="modal-content full-screen-modal">
+      <div class="modal-header-row" style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); margin-bottom: 12px; padding-bottom: 8px;">
+        <h3 class="modal-title" id="clipboardViewTitle" style="margin-bottom: 0; border-bottom: none; padding-bottom: 0; font-size: 1rem; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></h3>
+        <button id="btnClipboardViewHeaderClose" class="close-icon-btn" style="background: none; border: none; font-size: 1.5rem; color: var(--text-secondary); cursor: pointer; padding: 4px; line-height: 1; margin-left: 8px;">&times;</button>
+      </div>
+      <textarea id="clipboardViewText" readonly style="flex: 1; min-height: 200px; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background-color: rgba(0,0,0,0.03); color: var(--text-primary); font-family: inherit; font-size: 0.85rem; line-height: 1.5; resize: none; margin-bottom: 12px; outline: none;"></textarea>
+      <div class="modal-sms-row">
+        <div class="input-wrapper" style="flex: 1; position: relative; display: flex; align-items: center;">
+          <input type="tel" id="clipboardSmsPhone" placeholder="번호 입력 (쉼표나 공백으로 구분)" style="flex: 1; min-width: 0; padding-right: 32px;">
+          <button id="btnClearSmsPhone" class="clear-btn" title="지우기" style="position: absolute; right: 8px; background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.2rem; display: none; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 0; line-height: 1;">&times;</button>
+        </div>
+        <button id="btnClipboardSms" class="btn primary-btn small-btn" style="white-space: nowrap; padding: 0 12px; height: 36px;">SMS 전송</button>
+      </div>
+      <div class="segmented-control">
+        <button id="btnClipboardViewCopy" class="segment-btn primary-segment">복사</button>
+        <button id="btnClipboardViewEdit" class="segment-btn">수정</button>
+        <button id="btnClipboardViewDelete" class="segment-btn danger-segment">삭제</button>
+        <button id="btnClipboardViewClose" class="segment-btn">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Address View Modal -->
+  <div id="addressViewModal" class="modal-overlay hidden">
+    <div class="modal-content address-full-modal">
+      <h3 class="modal-title" style="margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">상세 정보</h3>
+      <div class="addr-view-scroll" style="overflow-y: auto; flex: 1; margin-bottom: 16px; padding-right: 4px; text-align: left;">
+        <div class="addr-info-grid">
+          <div class="addr-detail-row"><span class="addr-label">건물명:</span> <span id="addrViewName"></span></div>
+          <div class="addr-detail-row"><span class="addr-label">지번 주소:</span> <span id="addrViewAddress"></span></div>
+          <div class="addr-detail-row"><span class="addr-label">준공년월:</span> <span id="addrViewCompletion"></span></div>
+          <div class="addr-detail-row"><span class="addr-label">총층수:</span> <span id="addrViewTotalFloors"></span></div>
+          <div class="addr-detail-row"><span class="addr-label">관리실 번호:</span> <span id="addrViewOfficeNum" style="white-space: pre-wrap;"></span></div>
+          <div class="addr-detail-row"><span class="addr-label">관리실 위치:</span> <span id="addrViewOfficeLoc"></span></div>
+          <div class="addr-detail-row"><span class="addr-label">공동현관:</span> <span id="addrViewEntrance" style="white-space: pre-wrap;"></span></div>
+          <div class="addr-detail-row"><span class="addr-label">주차장 높이:</span> <span id="addrViewParking"></span></div>
+          <div class="addr-detail-row"><span class="addr-label">호실 층고:</span> <span id="addrViewRoom"></span></div>
+          <div class="addr-detail-row"><span class="addr-label">방화문 타입:</span> <span id="addrViewFiredoor"></span></div>
+        </div>
+        <div class="addr-detail-row"><span class="addr-label">공용시설:</span> <span id="addrViewFacilities"></span></div>
+        <div class="addr-detail-row"><span class="addr-label">메모:</span> <span id="addrViewMemo" style="white-space: pre-wrap;"></span></div>
+      </div>
+      <div class="segmented-control" style="margin-top: auto;">
+        <button id="btnAddrViewEdit" class="segment-btn primary-segment">수정</button>
+        <button id="btnAddrViewDelete" class="segment-btn danger-segment">삭제</button>
+        <button id="btnAddrViewClose" class="segment-btn">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Address Edit Modal -->
+  <div id="addressEditModal" class="modal-overlay hidden">
+    <div class="modal-content address-full-modal">
+      <h3 class="modal-title" id="addrEditModalTitle">주소 정보 수정</h3>
+      <div class="addr-edit-scroll" style="overflow-y: auto; flex: 1; margin-bottom: 16px; padding-right: 4px; text-align: left;">
+        <div class="addr-info-grid">
+          <div class="form-group small-group">
+            <label>건물명</label><input type="text" id="addrEditName">
+          </div>
+          <div class="form-group small-group">
+            <label>지번 주소</label><input type="text" id="addrEditAddress">
+          </div>
+          <div class="form-group small-group">
+            <label>준공년월</label><input type="text" id="addrEditCompletion">
+          </div>
+          <div class="form-group small-group">
+            <label>총층수</label><input type="text" id="addrEditTotalFloors">
+          </div>
+          <div class="form-group small-group">
+            <label>관리실 번호</label>
+            <textarea id="addrEditOfficeNum" rows="1" style="width:100% !important;"></textarea>
+          </div>
+          <div class="form-group small-group">
+            <label>관리실 위치</label><input type="text" id="addrEditOfficeLoc">
+          </div>
+          <div class="form-group small-group">
+            <label>공동현관</label>
+            <textarea id="addrEditEntrance" rows="1" style="width:100% !important;"></textarea>
+          </div>
+          <div class="form-group small-group">
+            <label>주차장 높이</label><input type="text" id="addrEditParking">
+          </div>
+          <div class="form-group small-group">
+            <label>호실 층고</label><input type="text" id="addrEditRoom">
+          </div>
+          <div class="form-group small-group">
+            <label>방화문 타입</label><input type="text" id="addrEditFiredoor">
+          </div>
+        </div>
+        <div class="form-group small-group">
+          <label>공용시설</label><input type="text" id="addrEditFacilities">
+        </div>
+        <div class="form-group small-group">
+          <label>메모</label>
+          <textarea id="addrEditMemo" rows="2" style="width:100%; border-radius:4px; border:1px solid var(--border-color); background:rgba(0,0,0,0.05); color:var(--text-primary); padding:8px; resize:vertical; font-family: inherit; font-size: 0.9rem; outline:none; transition:all 0.2s;"></textarea>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button id="btnCancelAddrEdit" class="btn">취소</button>
+        <button id="btnSaveAddr" class="btn primary-btn">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="deleteModal" class="modal-overlay hidden" style="z-index: 2000;">
+    <div class="modal-content">
+      <h3 class="modal-title">삭제 확인</h3>
+      <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 20px;">
+        정말 이 항목을 삭제하시겠습니까?
+      </p>
+      <div class="modal-actions">
+        <button id="btnCancelDelete" class="btn">취소</button>
+        <button id="btnConfirmDelete" class="btn danger-btn">삭제</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOC Modal -->
+  <div id="tocModal" class="modal-overlay hidden" style="z-index: 3000;">
+    <div class="modal-content full-screen-modal">
+      <div class="modal-header-row" style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); margin-bottom: 12px; padding-bottom: 8px;">
+        <h3 class="modal-title" style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;">목차 (MOC)</h3>
+        <button id="btnTOCClose" class="close-icon-btn" style="background: none; border: none; font-size: 1.5rem; color: var(--text-secondary); cursor: pointer; padding: 4px; line-height: 1;">&times;</button>
+      </div>
+      <div id="tocList" class="toc-list" style="flex: 1; overflow-y: auto; text-align: left;">
+        <!-- Headers will be inserted here -->
+      </div>
+    </div>
+  </div>
+
+  <script src="lib/marked.min.js"></script>
+  <script src="lib/purify.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
