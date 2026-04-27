@@ -40,8 +40,7 @@
     <main class="content-area">
       <!-- Memo Tab Content -->
       <section id="memo" class="tab-content active">
-        <textarea id="memoContent" placeholder="여기에 메모를 입력하세요..." spellcheck="false"></textarea>
-        <div id="memoPreview" class="markdown-body hidden"></div>
+        <div id="memoEditor" class="tiptap-editor"></div>
       </section>
 
       <section id="bookmarks" class="tab-content">
@@ -340,8 +339,6 @@
     </div>
   </div>
 
-  <script src="lib/marked.min.js"></script>
-  <script src="lib/purify.min.js"></script>
-  <script src="app.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>

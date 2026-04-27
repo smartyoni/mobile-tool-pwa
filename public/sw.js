@@ -4,8 +4,6 @@ const ASSETS = [
   './index.html',
   './sidepanel.css',
   './app.js',
-  './lib/marked.min.js',
-  './lib/purify.min.js',
   './건물정보_20260410.csv',
   './manifest.webmanifest',
   './icons/icon128.png',

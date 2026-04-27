@@ -1,3 +1,6 @@
+import { Editor } from '@tiptap/core';
+import StarterKit from '@tiptap/starter-kit';
+
 // Storage Wrapper for Web/Mobile
 const storage = {
   get: (keys, callback) => {
@@ -55,8 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const tabs = document.querySelectorAll('.nav-tab');
   const contentSections = document.querySelectorAll('.tab-content');
-  const memoContent = document.getElementById('memoContent');
-  const memoPreview = document.getElementById('memoPreview');
+  const memoEditor = document.getElementById('memoEditor');
   const tocModal = document.getElementById('tocModal');
   const tocList = document.getElementById('tocList');
   const btnTOC = document.getElementById('btnTOC');
@@ -137,134 +139,55 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let isEditMode = false;
 
-  // Handle Tab key for indentation in the textarea
-  memoContent.addEventListener('keydown', (e) => {
-    if (e.key === 'Tab') {
-      e.preventDefault();
-      const start = memoContent.selectionStart;
-      const end = memoContent.selectionEnd;
-      const value = memoContent.value;
-      
-      // Insert 2 spaces at cursor position
-      memoContent.value = value.substring(0, start) + "  " + value.substring(end);
-      
-      // Put caret at right position again
-      memoContent.selectionStart = memoContent.selectionEnd = start + 2;
-    }
+  // TipTap Editor Initialization
+  let editor = new Editor({
+    element: memoEditor,
+    extensions: [
+      StarterKit,
+    ],
+    content: '',
+    editable: false,
+    onUpdate({ editor }) {
+      // Optional: Auto-save or other logic
+    },
   });
-
-
-
-  function renderMarkdown() {
-    const rawValue = memoContent.value || '';
-    if (typeof marked !== 'undefined' && typeof DOMPurify !== 'undefined') {
-      const renderer = new marked.Renderer();
-      let headingIndex = 0;
-      const counters = [0, 0, 0];
-      
-      // Override heading renderer to add IDs and numbering
-      renderer.heading = ({ text, depth }) => {
-        const d = Math.min(depth, 3);
-        const id = `toc-heading-${headingIndex++}`;
-        
-        counters[d - 1]++;
-        for (let i = d; i < 3; i++) counters[i] = 0;
-        const number = counters.slice(0, d).join('.');
-
-        return `<h${depth} id="${id}">${number}. ${text}</h${depth}>`;
-      };
-
-      marked.setOptions({
-        renderer: renderer,
-        gfm: true,
-        breaks: true,
-        headerIds: false,
-        mangle: false
-      });
-      const cleanHtml = DOMPurify.sanitize(marked.parse(rawValue));
-      memoPreview.innerHTML = cleanHtml;
-      initCollapsibleHeaders();
-    } else {
-      memoPreview.textContent = rawValue;
-    }
-  }
-
-  function initCollapsibleHeaders() {
-    const headers = memoPreview.querySelectorAll('h1, h2, h3');
-    headers.forEach(header => {
-      header.addEventListener('click', () => {
-        const level = parseInt(header.tagName.substring(1));
-        header.classList.toggle('collapsed-header');
-        const isCollapsed = header.classList.contains('collapsed-header');
-        
-        let next = header.nextElementSibling;
-        while (next) {
-          // Stop if we hit a header of same or higher level (smaller or equal depth number)
-          if (next.tagName.match(/^H[1-3]$/)) {
-            const nextLevel = parseInt(next.tagName.substring(1));
-            if (nextLevel <= level) break;
-          }
-          
-          if (isCollapsed) {
-            next.classList.add('hidden-content');
-          } else {
-            // Only show if it's not hidden by its own parent collapse logic
-            // (Note: This is a simple implementation, it will show everything under it)
-            next.classList.remove('hidden-content');
-            
-            // If the next item is itself a collapsed header, skip its children
-            if (next.classList.contains('collapsed-header')) {
-              const subLevel = parseInt(next.tagName.substring(1));
-              let subNext = next.nextElementSibling;
-              while (subNext) {
-                if (subNext.tagName.match(/^H[1-3]$/)) {
-                  if (parseInt(subNext.tagName.substring(1)) <= subLevel) break;
-                }
-                subNext = subNext.nextElementSibling;
-              }
-              next = subNext;
-              continue;
-            }
-          }
-          next = next.nextElementSibling;
-        }
-      });
-    });
-  }
 
   function setMode(editing) {
     isEditMode = editing;
-    memoContent.classList.toggle('editing', editing);
+    const editorEl = document.querySelector('.tiptap-editor');
+    if (editorEl) {
+      editorEl.classList.toggle('editing', editing);
+    }
+    
+    if (editor) {
+      editor.setEditable(editing);
+      if (editing) {
+        editor.commands.focus();
+      }
+    }
+    
     if (isEditMode) {
-      memoContent.classList.remove('hidden');
-      memoPreview.classList.add('hidden');
-      memoContent.focus();
       btnEdit.classList.add('hidden');
       btnClear.classList.remove('hidden');
       btnSave.classList.remove('hidden');
     } else {
-      renderMarkdown();
-      memoContent.classList.add('hidden');
-      memoPreview.classList.remove('hidden');
       btnEdit.classList.remove('hidden');
       btnClear.classList.add('hidden');
       btnSave.classList.add('hidden');
     }
   }
 
-  // Load saved memo and default to View Mode
+  // Load saved memo
   storage.get(['memo'], (result) => {
-    if (result.memo) {
-      memoContent.value = result.memo;
+    if (result.memo && editor) {
+      // Check if it's markdown or HTML. If it contains < elements, it's likely HTML.
+      // Since we just switched, the existing content is Markdown.
+      // TipTap StarterKit handles basic markdown-like input but not full markdown.
+      // However, for migration, we can just put it as text or try to convert.
+      // For now, let's just set the content.
+      editor.commands.setContent(result.memo);
     }
-    setMode(false); // Default to View mode initially
-  });
-
-  // Edit via Double Click
-  memoContent.addEventListener('dblclick', () => {
-    if (!isEditMode) {
-      setMode(true);
-    }
+    setMode(false);
   });
 
   // Edit button click
@@ -274,192 +197,59 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Clear button click
   btnClear.addEventListener('click', () => {
-    memoContent.value = '';
-    memoContent.focus();
+    if (editor) {
+      editor.commands.clearContent();
+    }
   });
 
   // Save button click
   btnSave.addEventListener('click', () => {
-    const content = memoContent.value;
-    storage.set({ memo: content }, () => {
-      setMode(false); // Switch back to View Mode after saving
-    });
-  });
-
-  function generateTOC() {
-    const content = memoContent.value || '';
-    const lines = content.split('\n');
-    const headers = [];
-    let headingIndex = 0;
-    const counters = [0, 0, 0];
-
-    lines.forEach(line => {
-      // Look for ATX headers (# Title)
-      const match = line.match(/^(#{1,6})\s+(.*)$/);
-      if (match) {
-        const depth = Math.min(match[1].length, 3);
-        counters[depth - 1]++;
-        for (let i = depth; i < 3; i++) counters[i] = 0;
-        const number = counters.slice(0, depth).join('.');
-
-        headers.push({
-          level: depth,
-          text: `${number}. ${match[2].trim()}`,
-          id: `toc-heading-${headingIndex++}`
-        });
-      }
-    });
-
-    if (headers.length === 0) {
-      tocList.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-secondary);">표시할 목차가 없습니다.<br>(# 제목 형식을 사용하세요)</div>';
-      return;
-    }
-
-    tocList.innerHTML = headers.map(h => `
-      <div class="toc-item toc-h${h.level}" data-target="${h.id}">
-        ${h.text}
-      </div>
-    `).join('');
-
-    // TOC Item Click -> Navigate
-    tocList.querySelectorAll('.toc-item').forEach(item => {
-      item.addEventListener('click', () => {
-        const targetId = item.getAttribute('data-target');
-        tocModal.classList.add('hidden');
-        
-        // Navigation logic
-        if (isEditMode) {
-          setMode(false);
-          setTimeout(() => scrollToTarget(targetId), 200);
-        } else {
-          scrollToTarget(targetId);
-        }
+    if (editor) {
+      const content = editor.getHTML();
+      storage.set({ memo: content }, () => {
+        setMode(false);
       });
+    }
+  });
+
+  // Download memo as HTML file
+  if (btnDownload) {
+    btnDownload.addEventListener('click', () => {
+      if (!editor) return;
+      const content = editor.getHTML();
+      if (!content || content === '<p></p>') {
+        alert('저장할 내용이 없습니다.');
+        return;
+      }
+      
+      const blob = new Blob([content], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      
+      // Try to find a title from headers
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = content;
+      const firstHeader = tempDiv.querySelector('h1, h2, h3');
+      let fileName = firstHeader ? firstHeader.innerText.trim().replace(/[\\/:*?"<>|]/g, '_') : '';
+      
+      if (!fileName) {
+        const now = new Date();
+        const dateStr = now.getFullYear() + 
+                        String(now.getMonth() + 1).padStart(2, '0') + 
+                        String(now.getDate()).padStart(2, '0') + "_" +
+                        String(now.getHours()).padStart(2, '0') +
+                        String(now.getMinutes()).padStart(2, '0');
+        fileName = `memo_${dateStr}`;
+      }
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${fileName}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
     });
   }
-
-  function scrollToTarget(targetId) {
-    const targetEl = memoPreview.querySelector(`#${targetId}`);
-    if (targetEl) {
-      targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      targetEl.classList.add('scroll-highlight');
-      setTimeout(() => targetEl.classList.remove('scroll-highlight'), 3000);
-    }
-  }
-
-  // TOC button events
-  btnTOC.addEventListener('click', () => {
-    generateTOC();
-    tocModal.classList.remove('hidden');
-  });
-
-  btnTOCClose.addEventListener('click', () => {
-    tocModal.classList.add('hidden');
-  });
-  
-  // Download memo as MD file
-  btnDownload.addEventListener('click', () => {
-    const content = memoContent.value || '';
-    if (!content.trim()) {
-      alert('저장할 내용이 없습니다.');
-      return;
-    }
-    
-    // Use chrome.downloads API to force "Save As" dialog
-    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    
-    // Find the first header in the content
-    const headerMatch = content.match(/^#{1,6}\s+(.*)$/m);
-    let fileName = '';
-    
-    if (headerMatch && headerMatch[1]) {
-      // Use the first header text and sanitize it (remove invalid filename characters)
-      fileName = headerMatch[1].trim().replace(/[\\/:*?"<>|]/g, '_');
-    }
-    
-    if (!fileName) {
-      // Fallback if no header is found
-      const now = new Date();
-      const dateStr = now.getFullYear() + 
-                      String(now.getMonth() + 1).padStart(2, '0') + 
-                      String(now.getDate()).padStart(2, '0') + "_" +
-                      String(now.getHours()).padStart(2, '0') +
-                      String(now.getMinutes()).padStart(2, '0');
-      fileName = `memo_${dateStr}`;
-    }
-    
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${fileName}.md`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  });
-
-  // Collapse all headers
-  btnCollapseAll.addEventListener('click', () => {
-    const headers = memoPreview.querySelectorAll('h1, h2, h3');
-    if (headers.length === 0) return;
-
-    // 1. Mark all headers as collapsed
-    headers.forEach(h => h.classList.add('collapsed-header'));
-    
-    // 2. Hide all non-header elements
-    // 3. Hide all headers that are children of another collapsed header
-    const elements = Array.from(memoPreview.children);
-    elements.forEach(el => {
-      const isHeader = el.tagName.match(/^H[1-3]$/);
-      if (!isHeader) {
-        el.classList.add('hidden-content');
-      } else {
-        // It's a header. Should it be visible?
-        // Only if it's not preceded by a higher-level collapsed header
-        const level = parseInt(el.tagName.substring(1));
-        let prev = el.previousElementSibling;
-        let shouldHide = false;
-        
-        while (prev) {
-          if (prev.tagName.match(/^H[1-3]$/)) {
-            const prevLevel = parseInt(prev.tagName.substring(1));
-            if (prevLevel < level && prev.classList.contains('collapsed-header')) {
-              shouldHide = true;
-              break;
-            }
-            if (prevLevel <= level) break; // Independent header
-          }
-          prev = prev.previousElementSibling;
-        }
-        
-        if (shouldHide) {
-          el.classList.add('hidden-content');
-        } else {
-          el.classList.remove('hidden-content');
-        }
-      }
-    });
-  });
-
-  // Keyboard Shortcuts (Ctrl+E to toggle Edit/Save)
-  window.addEventListener('keydown', (e) => {
-    const isCtrl = e.ctrlKey || e.metaKey;
-    
-    // Toggle Edit/Save: Ctrl + E
-    if (isCtrl && e.key === 'e') {
-      // Check if we are in memo tab
-      if (memoActions.style.display !== 'none') {
-        e.preventDefault();
-        if (!btnEdit.classList.contains('hidden')) {
-          // In View Mode -> Enter Edit Mode
-          btnEdit.click();
-        } else if (!btnSave.classList.contains('hidden')) {
-          // In Edit Mode -> Save & Exit
-          btnSave.click();
-        }
-      }
-    }
-  });
   
   // Footer visibility depending on the active tab
   const bookmarkActions = document.getElementById('bookmarkActions');
@@ -474,10 +264,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if(addressActions) addressActions.style.display = 'none';
     if(pdfActionsEl) pdfActionsEl.style.display = 'none';
     
-    // Toggle TOC, Download, and CollapseAll buttons based on memo tab
-    if (btnTOC) btnTOC.style.display = (tabId === 'memo') ? 'block' : 'none';
+    // Toggle buttons based on memo tab
+    if (btnTOC) btnTOC.style.display = 'none'; // Hidden for now after TipTap migration
     if (btnDownload) btnDownload.style.display = (tabId === 'memo') ? 'block' : 'none';
-    if (btnCollapseAll) btnCollapseAll.style.display = (tabId === 'memo') ? 'block' : 'none';
+    if (btnCollapseAll) btnCollapseAll.style.display = 'none'; // Hidden for now after TipTap migration
 
     if (tabId === 'memo') {
       memoActions.style.display = 'flex';
