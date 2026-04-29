@@ -295,7 +295,249 @@ document.addEventListener('DOMContentLoaded', () => {
   // 3. Bookmarks Logic
   // ----------------------------------------------------
   const GRID_SIZE = 60;
-  let bookmarks = new Array(GRID_SIZE).fill(null);
+  const INITIAL_BOOKMARKS = [
+  {
+    "color": "#32D74B",
+    "name": "부동산이지",
+    "url": "https://bdseasy.com/dashboard"
+  },
+  {
+    "color": "#32D74B",
+    "name": "네이버웍스",
+    "url": "https://board.worksmobile.com/"
+  },
+  {
+    "color": "#32D74B",
+    "name": "인터넷등기소",
+    "url": "https://www.iros.go.kr/index.jsp"
+  },
+  {
+    "color": "#32D74B",
+    "name": "세움터",
+    "url": "https://www.eais.go.kr/"
+  },
+  {
+    "color": "#32D74B",
+    "name": "서울 정보광장",
+    "url": "https://land.seoul.go.kr/land/"
+  },
+  {
+    "color": "#32D74B",
+    "name": "렌트홈",
+    "url": "https://www.renthome.go.kr/webportal/main/portalMainList.open"
+  },
+  {
+    "color": "#32D74B",
+    "name": "토지이음",
+    "url": "https://www.eum.go.kr/web/am/amMain.jsp"
+  },
+  {
+    "color": "#32D74B",
+    "name": "정부24",
+    "url": "https://plus.gov.kr/"
+  },
+  {
+    "color": "#32D74B",
+    "name": "깃허브",
+    "url": "https://github.com"
+  },
+  {
+    "color": "#32D74B",
+    "name": "구글클라우드콘솔",
+    "url": "https://console.cloud.google.com/welcome?project=dashboard-469600"
+  },
+  {
+    "color": "#32D74B",
+    "name": "파이어베이스",
+    "url": "https://console.firebase.google.com/"
+  },
+  {
+    "color": "#32D74B",
+    "name": "버셀",
+    "url": "https://vercel.com/insightyonis-projects"
+  },
+  {
+    "color": "#32D74B",
+    "name": "구글시트",
+    "url": "https://docs.google.com/spreadsheets/u/0/"
+  },
+  {
+    "color": "#32D74B",
+    "name": "구글폼",
+    "url": "https://docs.google.com/forms/u/0/"
+  },
+  {
+    "color": "#32D74B",
+    "name": "구글드라이브",
+    "url": "https://drive.google.com/drive/"
+  },
+  {
+    "color": "#32D74B",
+    "name": "네이버메일",
+    "url": "https://mail.naver.com/v2/folders/-1"
+  },
+  {
+    "color": "#FFD60A",
+    "name": "e-그린우편(DM발송)",
+    "url": "https://service.epost.go.kr/hybridn.HybridIntro.postal?type=A"
+  },
+  {
+    "color": "#FFD60A",
+    "name": "*광고-부동산포스",
+    "url": "https://www.rfine.kr/manage/index.php"
+  },
+  {
+    "color": "#FFD60A",
+    "name": "내 블로그",
+    "url": "https://blog.naver.com/kindly98"
+  },
+  {
+    "color": "#FFD60A",
+    "name": "국토부 보도자료",
+    "url": "https://www.molit.go.kr/USR/NEWS/m_71/lst.jsp?cate=1"
+  },
+  {
+    "color": "#FF9F0A",
+    "name": "홈택스(기준시가)",
+    "url": "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&menuCd=index4"
+  },
+  {
+    "color": "#FF9F0A",
+    "name": "공시가격 알리미",
+    "url": "https://www.realtyprice.kr/notice/main/mainBody.htm"
+  },
+  {
+    "color": "#FF9F0A",
+    "name": "KB시세",
+    "url": "https://kbland.kr/map?xy=37.5205559,126.9265729,16"
+  },
+  {
+    "color": "#FF9F0A",
+    "name": "테크시세",
+    "url": "https://rtech.or.kr/main/mapSearch.do?posX="
+  },
+  {
+    "color": "#FF453A",
+    "name": "매물관리시스템",
+    "url": "https://smartyoni.github.io/insite_management/"
+  },
+  {
+    "color": "#FF453A",
+    "name": "고객관리앱",
+    "url": "https://smartyoni.github.io/FLOW-CRM/#"
+  },
+  {
+    "color": "#FF453A",
+    "name": "퍼스널대시보드",
+    "url": "https://smartyoni.github.io/PERSONAL-Dashboard/"
+  },
+  {
+    "color": "#FF453A",
+    "name": "문서작성앱(마크다운)",
+    "url": "https://page-writer.vercel.app/"
+  },
+  {
+    "color": "#FF453A",
+    "name": "임장앱(앱시트)",
+    "url": "https://www.appsheet.com/start/b40722a2-0f6f-4e50-906d-ba3998842785?platform=desktop#appName=a_%EB%A7%A4%EB%AC%BC%EC%9E%84%EC%9E%A5%EB%8D%B0%EC%9D%B4%ED%84%B0%EC%A0%95%EB%A6%AC-5089294&vss=H4sIAAAAAAAAA6tWKstMLQ8uSUzOVrKKrkbwvFMrlayUqmOUQioLUmOUrGKUnPPzSoryc2KUdGKU_BJzIYJvmhtfbWh4O2PHm-4lbxZMfb15S4xSrVJtrA7MpJLUYiWranINsqKWi3SUMlNS80oy0zJTi0CmgswAmgY1ASgN0g8UwNStVKujlFtakpiUkwr2DlB3bS1QLC0_ubQ4NSUM6DyKnFXsmedaUZCYl-KbnwI0PC0xpzi1FgAbo46elwEAAA==&view=%EC%83%81%EA%B0%80%ED%98%B8%EC%8B%A4%EC%A0%95%EB%B3%B4"
+  },
+  {
+    "color": "#FF453A",
+    "name": "호실관리(앱시트)",
+    "url": "https://www.appsheet.com/start/0fc8f520-2cc5-475c-af0c-99c06436e0dc?platform=desktop#appName=%EC%8A%A4%EB%A7%88%ED%8A%B8%ED%98%B8%EC%8B%A4%EA%B4%80%EB%A6%AC-5089294&vss=H4sIAAAAAAAAA6WOsQ3CMBREd7naE7hFFAhBA6LBFCb-kSwcO4odILI8AQswAEMwFOyAQ0DUEeV_X-_uIo6aTqsgiwP4Nv6uOXXgiALrriYBLjBxNjTOCDCBpawG-LzeH5ebQELasa8dyIPHMTL_p5lBK7JBl5qaPqn3csLHyu_eyWAwkBiqNsi9offUbKSUWemK1pPa5Bmj6_3MTs-1tGrhVA4spfGUXsQj-8hbAQAA&view=%ED%98%B8%EC%8B%A4"
+  },
+  {
+    "color": "#FF453A",
+    "name": "아카이브(앱시트)",
+    "url": "https://www.appsheet.com/start/7101a668-bcf9-4aeb-95db-fa78d1859b7d?platform=desktop#appName=%EC%95%84%EC%B9%B4%EC%9D%B4%EB%B8%8C-5089294&vss=H4sIAAAAAAAAA6tWKstMLQ8uSUzOVrKKrkbwvFMrlayUqmOUQioLUmOUrGKUnPPzSoryc2KUdGKU_BJzIYJvmta8mbvlbdeOV1saXi9bE6NUq1QbqwMzpiS1WMmqmixTrKjiFh2lzJTUvJLMtMzUIpCRIAOARkG1A6VBmoECaFqVanWUcktLEpNyUsG-AGqtrQWKpeUnlxanpoQBHUa-g4o981wrChLzUnzzU4AmpyXmFKfWAgDUF0AdiAEAAA==&view=%EC%82%AC%EC%9D%B4%ED%8A%B8%EA%B4%80%EB%A6%AC"
+  },
+  {
+    "color": "#FF453A",
+    "name": "앱시트수정페이지",
+    "url": "https://www.appsheet.com/home/apps"
+  },
+  {
+    "color": "#BF5AF2",
+    "name": "호갱노노",
+    "url": "https://hogangnono.com/"
+  },
+  {
+    "color": "#BF5AF2",
+    "name": "아실(아파트실거래가)",
+    "url": "https://asil.kr/asil/index.jsp"
+  },
+  {
+    "color": "#BF5AF2",
+    "name": "부동산지인",
+    "url": "https://aptgin.com/root_main"
+  },
+  {
+    "color": "#BF5AF2",
+    "name": "디스코",
+    "url": "https://www.disco.re/"
+  },
+  {
+    "color": "#FF9F0A",
+    "name": "공인중개사협회",
+    "url": "https://공인중개사협회"
+  },
+  {
+    "color": "#FF9F0A",
+    "name": "미리캔버스",
+    "url": "https://www.miricanvas.com/ko"
+  },
+  {
+    "color": "#FF9F0A",
+    "name": "성원애드피아",
+    "url": "https://www.swadpia.co.kr/"
+  },
+  {
+    "color": "#FF9F0A",
+    "name": "텐 홈페이지",
+    "url": "https://ten.co.kr"
+  },
+  {
+    "color": "#0A84FF",
+    "name": "건강보험",
+    "url": "https://www.nhis.or.kr/nhis/index.do"
+  },
+  {
+    "color": "#0A84FF",
+    "name": "주소라벨(구글시트)",
+    "url": "https://docs.google.com/spreadsheets/d/1jszo6dQS7nhNA6it2xgtjFGB6jQVyey2OQ5UVIbMjyg/edit?gid=1769831901#gid=1769831901"
+  },
+  {
+    "color": "#0A84FF",
+    "name": "제미나이",
+    "url": "https://gemini.google.com/"
+  },
+  {
+    "color": "#0A84FF",
+    "name": "노트북lm",
+    "url": "https://notebooklm.google.com/"
+  },
+  {
+    "color": "#FF9F0A",
+    "name": "마이토리툴스",
+    "url": "https://tools.mytory.net/"
+  },
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null
+];
+  let bookmarks = [...INITIAL_BOOKMARKS];
   let selectedBookmarkIndex = null;
   let bookmarkSearchQuery = ''; // [FIX] Move declaration here
 
@@ -324,6 +566,9 @@ document.addEventListener('DOMContentLoaded', () => {
       // Ensure it's exactly GRID_SIZE
       while (bookmarks.length < GRID_SIZE) bookmarks.push(null);
       if (bookmarks.length > GRID_SIZE) bookmarks = bookmarks.slice(0, GRID_SIZE);
+    } else {
+      // Save the hardcoded bookmarks to storage on first load
+      storage.set({ bookmarks: bookmarks });
     }
     renderBookmarks();
   });
@@ -579,7 +824,113 @@ document.addEventListener('DOMContentLoaded', () => {
   // ----------------------------------------------------
   // 4. Clipboard Logic
   // ----------------------------------------------------
-  let clipboards = new Array(GRID_SIZE).fill(null);
+  const INITIAL_CLIPBOARDS = [
+  {
+    "color": "#BF5AF2",
+    "text": "지하철5호선 마곡역 5번출구 도보1분\n차량이용시 강서구 마곡동 799-7 마곡그랑트윈타워 에이동 에 주차하시고 5층으로 올라오셔서 인사이트부동산으로 오시면 됩니다\n주차는 1시간 가능합니다.",
+    "title": "오시는길"
+  },
+  {
+    "color": "#BF5AF2",
+    "text": "안녕하세요 오늘 시에 뵙기로한 인사이트부동산입니다. 일정에 변동있으신지 여쭤보려 연락드립니다~",
+    "title": "미팅일 당일 안내문자"
+  },
+  {
+    "color": "#BF5AF2",
+    "text": "안녕하세요 인사이트부동산입니다. \n오늘 ~시에 저희 사무실에서 계약서작성 있으십니다.\n본인 신분증과 도장(도장 없으시면 사인하셔도 됩니다.) 지참하시고 내방해주시면 됩니다.",
+    "title": "계약서작성일안내"
+  },
+  {
+    "color": "#FF453A",
+    "text": "dudgus1979!",
+    "title": "영현1979!"
+  },
+  {
+    "color": "#32D74B",
+    "text": "계약서작성에 필요한 인적사항 부탁드립니다.\n1.성함\n2.주소(현재 거주중인 주소 적어주시면 됩니다.)\n3.주민번호(계약서에 들어가는 내용이라 뒷자리까지 모두 부탁드립니다.)\n4.전화번호",
+    "title": "인적사항요청"
+  },
+  {
+    "color": "#32D74B",
+    "text": "안녕하세요 저는 약속장소에 도착했습니다. 도착하시면 연락주세요~",
+    "title": "미팅장소 도착문의"
+  },
+  {
+    "color": "#32D74B",
+    "text": "방 잘 보고 나왔습니다. 불 끄고 문 잘 잠그고 나왔습니다. 감사합니다.",
+    "title": "방을 본 후 물건지 부동산에 보낼 문자"
+  },
+  null,
+  {
+    "color": "#32D74B",
+    "text": "인사이트부동산 중개수수료: 원(부가세포함금액)\n카카오뱅크(최영현) 3333-33-9292435 로 입금해 주시면 됩니다.",
+    "title": "중개수수료 안내"
+  },
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  {
+    "color": "#FF9F0A",
+    "text": "마곡역 전용10평 수익률 좋은 임대 맞춰진 상가",
+    "title": "상가 매매광고 매물특징"
+  },
+  {
+    "color": "#FF9F0A",
+    "text": "📞상담문의•즉시연결\n➡️ 010-2019-2463 최영현 대표공인중개사 \n\n✨인사이트부동산 공인중개사 사무소 / 상가 사무실 전문공인중개사\n마곡의 상권데이터와 풍부한 중개경험을 기반으로 업종별 최적지 추천부터 렌트프리.권리금 협의까지 전문적으로 조율해 드립니다. \n\n✅임대조건 \n• 보증금:  만원\n• 월차임:  만원\n• 전용면적:\n• 입주시기:즉시입주,협의가능\n• 관리비:전용평당 약1.5만원(수도 전기등 공과금은 사용량에 따라 부과됨)\n• 주차1대 무료 방문객 앱할인\n• 권리금:없음 (또는 문의주시면 친절히 설명드리겠습니다.)\n\n✅매물설명\n\n• 입지:지하철역 도보 ~분\n• 인테리어여부:\n• 채광,뷰 좋은지 여부 \n• 원상복구 등 현재 상태에 대한 설명 \n• 화장실: 각층별 남녀 분리된 화장실 있음 \n\n■ 이 매물은 문의가 많은 인기 매물입니다.\n■ 부담갖지 마시고 연락주세요 친절히 상담해드립니다. \n■ 그외 광고되지 않은 매물 조건 문의주시면 맞춤서비스로 중개해 드리겠습니다. \n■ 임대조건 공사기간 렌트프리 권리금 업종 등 조건 최선을 다해 협의해 드립니다.",
+    "title": "상가 매매광고 상세설명"
+  },
+  null,
+  null,
+  {
+    "color": "#0A84FF",
+    "text": "",
+    "title": "오피스텔 임대광고"
+  },
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null
+];
+  let clipboards = [...INITIAL_CLIPBOARDS];
   let selectedClipboardIndex = null;
   let clipboardSearchQuery = ''; // [FIX] Move declaration here
 
@@ -612,6 +963,8 @@ document.addEventListener('DOMContentLoaded', () => {
       clipboards = result.clipboards;
       while (clipboards.length < GRID_SIZE) clipboards.push(null);
       if (clipboards.length > GRID_SIZE) clipboards = clipboards.slice(0, GRID_SIZE);
+    } else {
+      storage.set({ clipboards: clipboards });
     }
     renderClipboards();
   });
